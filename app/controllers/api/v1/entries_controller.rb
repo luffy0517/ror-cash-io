@@ -3,9 +3,9 @@ class Api::V1::EntriesController < ApplicationController
 
   # GET /entries
   def index
-    @entries = Entry.all
+    @entries = Entry.order(date: :asc).limit(20)
 
-    render json: @entries
+    render json: { data: @entries }
   end
 
   # GET /entries/1
