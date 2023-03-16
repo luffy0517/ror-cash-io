@@ -1,6 +1,6 @@
 # CashIO Backend
 
-Application for study Ruby on Rails.
+App to study Ruby on Rails.
 
 ## Useful Commands
 
