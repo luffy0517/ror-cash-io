@@ -70,7 +70,7 @@ rails s
 
 ### Database config file with postgres setup:
 
-#### config/database.yml
+#### ./config/database.yml
 
 ```yml
 default: &default
@@ -95,9 +95,44 @@ production:
   password: <%= ENV["CASH_IO_DATABASE_PASSWORD"] %>
 ```
 
+### Gemfile:
+
+### ./Gemfile
+
+```gemfile
+source "https://rubygems.org"
+git_source(:github) { |repo| "https://github.com/#{repo}.git" }
+
+ruby "3.1.3"
+
+gem "rails", "~> 7.0.4", ">= 7.0.4.3"
+
+gem "pg", "~> 1.1"
+
+gem "puma", "~> 5.0"
+
+gem "tzinfo-data", platforms: %i[ mingw mswin x64_mingw jruby ]
+
+gem "bootsnap", require: false
+
+gem "rack-cors"
+
+gem "kaminari"
+
+gem "pg_search"
+
+group :development, :test do
+  gem "debug", platforms: %i[ mri mingw x64_mingw ]
+end
+
+group :development do
+  gem "faker"
+end
+```
+
 ### Routes:
 
-#### config/routes.rb
+#### ./config/routes.rb
 
 ```rb
 Rails.application.routes.draw do
@@ -111,7 +146,7 @@ end
 
 ### Entity Model with pg_search gem setup and validation:
 
-#### app/models/entry.rb
+#### ./app/models/entry.rb
 
 ```rb
 class Entry < ApplicationRecord
@@ -134,7 +169,7 @@ end
 
 ### CRUD controller with pagination, order by, direction and search:
 
-#### app/controllers/api/v1/entries_controller.rb
+#### ./app/controllers/api/v1/entries_controller.rb
 
 ```rb
 class Api::V1::EntriesController < ApplicationController
@@ -232,7 +267,7 @@ end
 
 ### Seeds:
 
-#### db/seeds.rb
+#### ./db/seeds.rb
 
 ```rb
 50.times do
