@@ -2,47 +2,61 @@
 
 App to study Ruby on Rails.
 
----
-
 ## Useful Commands
 
 ### Create new model:
 
-`rails g model Entry name:string phone:string last_purchase:date`
+```
+rails g model Entry name:string phone:string last_purchase:date
+```
 
 ### Create new database based on app/models/\*.rb:
 
-`rails db:create`
+```
+rails db:create
+```
 
 ### Migrate created database:
 
-`rails db:migrate`
+```
+rails db:migrate
+```
 
 ### Prepare tests for created database:
 
-`rails db:test:prepare`
+```
+rails db:test:prepare
+```
 
 ### Populate database based on db/seeds.rb:
 
-`rails db:seed RAILS_ENV=development`
+```
+rails db:seed RAILS_ENV=development
+```
 
 ### Generate controller with CRUD operations:
 
-`rails g scaffold_controller Entry`
+```
+rails g scaffold_controller Entry
+```
 
 ### Generate Kaminari gem config file, to implement pagination:
 
-`rails g kaminari:config`
+```
+rails g kaminari:config`
+```
 
 ### Show all api routes:
 
-`rails routes`
+```
+rails routes
+```
 
 ### Serve app:
 
-`rails s`
-
----
+```
+rails s`
+```
 
 ## Useful gems
 
@@ -52,11 +66,9 @@ App to study Ruby on Rails.
 
 `pg_search` => PostgreSQL search.
 
----
-
 ## Code Examples
 
-### Database config file with postgres setup
+### Database config file with postgres setup:
 
 #### config/database.yml
 
@@ -83,7 +95,7 @@ production:
   password: <%= ENV["CASH_IO_DATABASE_PASSWORD"] %>
 ```
 
-### Routes
+### Routes:
 
 #### config/routes.rb
 
@@ -97,7 +109,7 @@ Rails.application.routes.draw do
 end
 ```
 
-### Entity Model
+### Entity Model with pg_search gem setup and validation:
 
 #### app/models/entry.rb
 
@@ -120,7 +132,7 @@ class Entry < ApplicationRecord
 end
 ```
 
-### CRUD controller with pagination, order by, direction and search
+### CRUD controller with pagination, order by, direction and search:
 
 #### app/controllers/api/v1/entries_controller.rb
 
@@ -218,7 +230,7 @@ class Api::V1::EntriesController < ApplicationController
 end
 ```
 
-### Seeds
+### Seeds:
 
 #### db/seeds.rb
 
