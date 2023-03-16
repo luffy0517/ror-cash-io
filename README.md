@@ -10,7 +10,7 @@ App to study Ruby on Rails.
 
 `rails g model Entry name:string phone:string last_purchase:date`
 
-### Create new database based on app/models/\*\*.rb:
+### Create new database based on app/models/\*.rb:
 
 `rails db:create`
 
