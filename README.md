@@ -191,6 +191,33 @@ class Api::V1::EntriesController < ApplicationController
 end
 ```
 
+### Database config file with postgres setup
+
+#### config/database.yml
+
+```yml
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  username: postgres
+  password: root
+
+development:
+  <<: *default
+  database: cash_io_development
+
+test:
+  <<: *default
+  database: cash_io_test
+
+production:
+  <<: *default
+  database: cash_io_production
+  username: cash_io
+  password: <%= ENV["CASH_IO_DATABASE_PASSWORD"] %>
+```
+
 ### Seeds
 
 #### db/seeds.rb
