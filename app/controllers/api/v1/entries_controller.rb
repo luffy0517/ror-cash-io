@@ -25,7 +25,7 @@ class Api::V1::EntriesController < ApplicationController
 
     @search = params[:search]
 
-    @result = Entry.order(@order_by + " " + @direction).page(@page).per(@per_page)
+    @result = Entry.order("#@order_by #@direction").page(@page).per(@per_page)
 
     if @search
       @result = @result.search_by_term(@search)
