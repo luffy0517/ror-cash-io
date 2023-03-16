@@ -43,7 +43,7 @@ rails g scaffold_controller Entry
 ### Generate Kaminari gem config file, to implement pagination:
 
 ```
-rails g kaminari:config`
+rails g kaminari:config
 ```
 
 ### Show all api routes:
@@ -55,7 +55,7 @@ rails routes
 ### Serve app:
 
 ```
-rails s`
+rails s
 ```
 
 ## Useful gems
