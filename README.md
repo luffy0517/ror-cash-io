@@ -2,7 +2,7 @@
 
 Application for study Ruby on Rails.
 
-## Commands
+## Useful Commands
 
 ### Create new model:
 
@@ -40,6 +40,12 @@ rails db:seed RAILS_ENV=development
 rails g scaffold_controller Entry
 ```
 
+### Generate Kaminari gem config file, to implement pagination:
+
+```
+rails g kaminari:config
+```
+
 ### Show all api routes:
 
 ```
@@ -52,7 +58,7 @@ rails routes
 rails s
 ```
 
-## Examples
+## Code Examples
 
 ### config/routes.rb:
 
@@ -84,7 +90,7 @@ class Api::V1::EntriesController < ApplicationController
 
   # GET /entries
   def index
-    @entries = Entry.all
+    @entries = Entry.order(params[:order_by]).page(params[:page]).limit(params[:per_page])
 
     render json: @entries
   end
