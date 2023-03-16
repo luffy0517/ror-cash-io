@@ -2,65 +2,63 @@
 
 App to study Ruby on Rails.
 
+---
+
 ## Useful Commands
 
 ### Create new model:
 
-```
-rails g model Client name:string phone:string last_purchase:date
-```
+`rails g model Client name:string phone:string last_purchase:date`
 
 ### Create new database based on app/models/\*\*.rb:
 
-```
-rails db:create
-```
+`rails db:create`
 
 ### Migrate created database:
 
-```
-rails db:migrate
-```
+`rails db:migrate`
 
 ### Prepare tests for created database:
 
-```
-rails db:test:prepare
-```
+`rails db:test:prepare`
 
 ### Populate database based on db/seeds.rb:
 
-```
-rails db:seed RAILS_ENV=development
-```
+`rails db:seed RAILS_ENV=development`
 
 ### Generate controller with CRUD operations:
 
-```
-rails g scaffold_controller Entry
-```
+`rails g scaffold_controller Entry`
 
 ### Generate Kaminari gem config file, to implement pagination:
 
-```
-rails g kaminari:config
-```
+`rails g kaminari:config`
 
 ### Show all api routes:
 
-```
-rails routes
-```
+`rails routes`
 
 ### Serve app:
 
-```
-rails s
-```
+`rails s`
+
+---
+
+## Useful gems
+
+`rack-cors` => Makes cross-origin AJAX possible.
+
+`kaminari` => Pagination.
+
+`pg_search` => PostgreSQL search.
+
+---
 
 ## Code Examples
 
-### config/routes.rb:
+### Routes
+
+#### config/routes.rb
 
 ```rb
 Rails.application.routes.draw do
@@ -72,17 +70,32 @@ Rails.application.routes.draw do
 end
 ```
 
-### app/models/entry.rb:
+### Entity Model
+
+#### app/models/entry.rb
 
 ```rb
 class Entry < ApplicationRecord
+  include PgSearch::Model
+
   validates :name, presence: true
   validates :date, presence: true
   validates :value, presence: true
+
+  pg_search_scope :search_by_term,
+    against: :name,
+    using: {
+      tsearch: {
+        any_word: true,
+        prefix: true,
+      },
+    }
 end
 ```
 
-### app/controllers/api/v1/entries_controller.rb:
+### CRUD controller with pagination, order by, direction and search
+
+#### app/controllers/api/v1/entries_controller.rb
 
 ```rb
 class Api::V1::EntriesController < ApplicationController
@@ -90,9 +103,48 @@ class Api::V1::EntriesController < ApplicationController
 
   # GET /entries
   def index
-    @entries = Entry.order(params[:order_by]).page(params[:page]).limit(params[:per_page])
+    @direction = "ASC"
+    if params[:direction]
+      @direction = params[:direction]
+    end
 
-    render json: @entries
+    @order_by = "id"
+    if params[:order_by]
+      @order_by = params[:order_by]
+    end
+
+    @page = 1
+    if params[:page]
+      @page = params[:page].to_i
+    end
+
+    @per_page = 25
+    if params[:per_page]
+      @per_page = params[:per_page].to_i
+    end
+
+    @search = params[:search]
+
+    @result = Entry.order(@order_by + " " + @direction).page(@page).per(@per_page)
+
+    if @search
+      @result = @result.search_by_term(@search)
+    end
+
+    @total = @result.total_count
+
+    @last_page = @total.fdiv(@per_page).ceil
+
+    render json: {
+      result: @result,
+      direction: @direction,
+      order_by: @order_by,
+      page: @page,
+      per_page: @per_page,
+      search: @search,
+      total: @total,
+      last_page: @last_page,
+    }
   end
 
   # GET /entries/1
@@ -139,7 +191,9 @@ class Api::V1::EntriesController < ApplicationController
 end
 ```
 
-### db/seeds.rb:
+### Seeds
+
+#### db/seeds.rb
 
 ```rb
 50.times do

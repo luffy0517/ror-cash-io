@@ -1,5 +1,4 @@
 class Entry < ApplicationRecord
-  include OrderableByTimestamp
   include PgSearch::Model
 
   validates :name, presence: true
