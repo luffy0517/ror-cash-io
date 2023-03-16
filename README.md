@@ -8,7 +8,7 @@ App to study Ruby on Rails.
 
 ### Create new model:
 
-`rails g model Client name:string phone:string last_purchase:date`
+`rails g model Entry name:string phone:string last_purchase:date`
 
 ### Create new database based on app/models/\*\*.rb:
 
