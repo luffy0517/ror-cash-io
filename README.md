@@ -231,5 +231,4 @@ end
     value: Faker::Number.between(from: -1000.0, to: 1000.0),
   })
 end
-
 ```
