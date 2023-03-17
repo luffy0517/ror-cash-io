@@ -1,7 +1,6 @@
 class Api::V1::EntriesController < ApplicationController
   before_action :authorize_request
   before_action :set_entry, only: %i[ show update destroy ]
-  wrap_parameters :entry, include: [:name, :description, :date, :value]
 
   def index
     direction = "ASC"
@@ -81,6 +80,6 @@ class Api::V1::EntriesController < ApplicationController
   end
 
   def entry_params
-    params.require(:entry).permit(:name, :description, :date, :value)
+    params.permit(:name, :description, :date, :value)
   end
 end

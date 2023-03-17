@@ -1,7 +1,6 @@
 class Api::V1::UsersController < ApplicationController
   before_action :authorize_request, except: :create
   before_action :set_user, only: %i[ show update destroy ]
-  wrap_parameters :user, include: [:first_name, :last_name, :email, :username, :password, :password_confirmation]
 
   def index
     direction = "ASC"
@@ -81,6 +80,6 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def user_params
-    params.require(:user).permit(:first_name, :last_name, :avatar, :username, :email, :password, :password_confirmation)
+    params.permit(:first_name, :last_name, :avatar, :username, :email, :password, :password_confirmation)
   end
 end
