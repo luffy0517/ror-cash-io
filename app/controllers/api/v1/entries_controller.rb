@@ -53,7 +53,7 @@ class Api::V1::EntriesController < ApplicationController
   end
 
   def create
-    @entry = @current_user.entries.create(entry_params)
+    @entry = @current_user.entries.new(entry_params)
 
     if @entry.save
       render json: @entry, status: :created

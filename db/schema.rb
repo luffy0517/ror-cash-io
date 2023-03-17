@@ -22,7 +22,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_17_003007) do
     t.bigint "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["user_id"], name: "index_entries_on_user_id", unique: true
+    t.index ["user_id"], name: "index_entries_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
