@@ -76,7 +76,7 @@ rails s
 
 ## Code Examples
 
-### Database config file with postgres setup:
+### Database config file with PostgreSQL setup:
 
 #### ./config/database.yml
 
