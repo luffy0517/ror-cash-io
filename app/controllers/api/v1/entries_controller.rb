@@ -1,48 +1,50 @@
 class Api::V1::EntriesController < ApplicationController
+  before_action :authorize_request
   before_action :set_entry, only: %i[ show update destroy ]
+  wrap_parameters :entry, include: [:name, :description, :date, :value]
 
   def index
-    @direction = "ASC"
+    direction = "ASC"
     if params[:direction]
-      @direction = params[:direction]
+      direction = params[:direction]
     end
 
-    @order_by = "id"
+    order_by = "id"
     if params[:order_by]
-      @order_by = params[:order_by]
+      order_by = params[:order_by]
     end
 
-    @page = 1
+    page = 1
     if params[:page]
-      @page = params[:page].to_i
+      page = params[:page].to_i
     end
 
-    @per_page = 25
+    per_page = 25
     if params[:per_page]
-      @per_page = params[:per_page].to_i
+      per_page = params[:per_page].to_i
     end
 
-    @search = params[:search]
+    search = params[:search]
 
-    @result = Entry.order("#@order_by #@direction").page(@page).per(@per_page)
+    @entries = @current_user.entries.order(order_by + " " + direction).page(page).per(per_page)
 
-    if @search
-      @result = @result.search_by_term(@search)
+    if search
+      @entries = @entries.search_by_term(search)
     end
 
-    @total = @result.total_count
+    total = @entries.total_count
 
-    @last_page = @total.fdiv(@per_page).ceil
+    last_page = total.fdiv(per_page).ceil
 
     render json: {
-      result: @result,
-      direction: @direction,
-      order_by: @order_by,
-      page: @page,
-      per_page: @per_page,
-      search: @search,
-      total: @total,
-      last_page: @last_page,
+      result: @entries,
+      direction: direction,
+      order_by: order_by,
+      page: page,
+      per_page: per_page,
+      search: search,
+      total: total,
+      last_page: last_page,
     }
   end
 
@@ -51,7 +53,7 @@ class Api::V1::EntriesController < ApplicationController
   end
 
   def create
-    @entry = Entry.new(entry_params)
+    @entry = @current_user.entries.create(entry_params)
 
     if @entry.save
       render json: @entry, status: :created
@@ -75,7 +77,7 @@ class Api::V1::EntriesController < ApplicationController
   private
 
   def set_entry
-    @entry = Entry.find(params[:id])
+    @entry = @current_user.entries.find(params[:id])
   end
 
   def entry_params

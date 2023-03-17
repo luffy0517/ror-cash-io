@@ -9,8 +9,9 @@ gem "pg", "~> 1.1"
 
 gem "puma", "~> 5.0"
 
-# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-# gem "bcrypt", "~> 3.1.7"
+gem "bcrypt", "~> 3.1.7"
+
+gem "jwt"
 
 gem "tzinfo-data", platforms: %i[ mingw mswin x64_mingw jruby ]
 
@@ -21,6 +22,8 @@ gem "rack-cors"
 gem "kaminari"
 
 gem "pg_search"
+
+gem "carrierwave", ">= 3.0.0.beta", "< 4.0"
 
 group :development, :test do
   gem "debug", platforms: %i[ mri mingw x64_mingw ]

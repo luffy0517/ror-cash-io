@@ -46,6 +46,12 @@ rails g scaffold_controller Entry
 rails g kaminari:config
 ```
 
+### Generate uploader:
+
+```
+rails g uploader Avatar
+```
+
 ### Show all api routes:
 
 ```
@@ -60,11 +66,13 @@ rails s
 
 ## Useful gems
 
-`rack-cors` => Makes cross-origin AJAX possible.
+`"rack-cors"` => Makes cross-origin AJAX possible.
 
-`kaminari` => Pagination.
+`"kaminari"` => Pagination.
 
-`pg_search` => PostgreSQL search.
+`"pg_search"` => PostgreSQL search.
+
+`"carrierwave", ">= 3.0.0.beta", "< 4.0"` => File upload.
 
 ## Code Examples
 

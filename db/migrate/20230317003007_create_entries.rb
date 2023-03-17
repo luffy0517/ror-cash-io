@@ -5,6 +5,7 @@ class CreateEntries < ActiveRecord::Migration[7.0]
       t.string :description
       t.date :date
       t.decimal :value
+      t.belongs_to :user, index: { unique: true }, foreign_key: true
 
       t.timestamps
     end
