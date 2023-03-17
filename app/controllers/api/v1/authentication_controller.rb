@@ -12,13 +12,18 @@ class Api::V1::AuthenticationController < ApplicationController
       render json: {
         token: token,
         exp: time.strftime("%m-%d-%Y %H:%M"),
-        username: @user.username,
-      }, status: :ok
+        user: @user,
+      }, except: [:password_digest], status: :ok
     else
       render json: {
         error: "unauthorized",
       }, status: :unauthorized
     end
+  end
+
+  # GET /auth/me
+  def me
+    render json: @current_user, except: [:password_digest]
   end
 
   private
