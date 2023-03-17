@@ -1,6 +1,6 @@
 # CashIO Backend
 
-App to study Ruby on Rails.
+CashIO API built with Ruby on Rails.
 
 ## Useful Commands
 
