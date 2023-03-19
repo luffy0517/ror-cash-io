@@ -151,128 +151,338 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :entries
+      resources :users
+      post '/auth/login', to: 'authentication#login'
+      get '/auth/me', to: 'authentication#me'
+      get '/*a', to: 'application#not_found'
     end
   end
 end
 ```
 
-### Entity Model with pg_search gem setup and validation:
+### Entity models with pg_search gem setup and validation:
+
+#### ./app/models/user.rb
+
+```rb
+# User entity model definition
+class User < ApplicationRecord
+  include PgSearch::Model
+  has_secure_password
+  has_many :entries, dependent: :destroy
+  mount_uploader :avatar, UserAvatarUploader
+  validates :email, presence: true, uniqueness: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :username, presence: true, uniqueness: true, on: :create
+  validates :password, length: { minimum: 6, maximum: 20 }, on: :create
+  pg_search_scope :search_by_term, against: %i[first_name last_name email username], using: {
+    tsearch: {
+      any_word: true,
+      prefix: true
+    }
+  }
+end
+```
+
+#### ./app/models/category.rb
+
+```rb
+# Category entity model definition
+class Category < ApplicationRecord
+  include PgSearch::Model
+  belongs_to :user
+  has_many :entries, dependent: :destroy
+  mount_uploader :image, CategoryImageUploader
+  validates :name, presence: true, uniqueness: true
+  pg_search_scope :search_by_term, against: :name, using: {
+    tsearch: {
+      any_word: true,
+      prefix: true
+    }
+  }
+end
+```
+
+#### ./app/models/user.rb
+
+```rb
+# User entity model definition
+class User < ApplicationRecord
+  include PgSearch::Model
+  has_secure_password
+  has_many :entries, dependent: :destroy
+  mount_uploader :avatar, UserAvatarUploader
+  validates :email, presence: true, uniqueness: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :username, presence: true, uniqueness: true, on: :create
+  validates :password, length: { minimum: 6, maximum: 20 }, on: :create
+  pg_search_scope :search_by_term, against: %i[first_name last_name email username], using: {
+    tsearch: {
+      any_word: true,
+      prefix: true
+    }
+  }
+end
+```
+
+#### ./app/models/category.rb
+
+```rb
+# Category entity model definition
+class Category < ApplicationRecord
+  include PgSearch::Model
+  belongs_to :user
+  has_many :entries, dependent: :destroy
+  mount_uploader :image, CategoryImageUploader
+  validates :name, presence: true, uniqueness: true
+  pg_search_scope :search_by_term, against: :name, using: {
+    tsearch: {
+      any_word: true,
+      prefix: true
+    }
+  }
+end
+```
 
 #### ./app/models/entry.rb
 
 ```rb
+# Entry entity model definition
 class Entry < ApplicationRecord
   include PgSearch::Model
-
+  belongs_to :user
+  belongs_to :category
   validates :name, presence: true
   validates :date, presence: true
   validates :value, presence: true
-
-  pg_search_scope :search_by_term,
-    against: :name,
-    using: {
-      tsearch: {
-        any_word: true,
-        prefix: true,
-      },
+  pg_search_scope :search_by_term, against: %i[name description], using: {
+    tsearch: {
+      any_word: true,
+      prefix: true
     }
+  }
 end
 ```
 
-### CRUD controller with pagination, order by, direction and search:
+### Controllers:
+
+#### ./app/controllers/application_controller.rb
+
+```rb
+# Application Controller class definition
+class ApplicationController < ActionController::API
+  def not_found
+    render json: { error: 'not_found' }
+  end
+
+  def authorize_request
+    header = request.headers['Authorization']
+    header = header.split(' ').last if header
+
+    begin
+      @decoded = JsonWebToken.decode(header)
+      @current_user = User.find(@decoded[:user_id])
+    rescue ActiveRecord::RecordNotFound => e
+      render json: { errors: e.message }, status: :unauthorized
+    rescue JWT::DecodeError => e
+      render json: { errors: e.message }, status: :unauthorized
+    end
+  end
+end
+```
+
+#### ./app/controllers/api/v1/authentication_controller.rb
+
+```rb
+module Api
+  module V1
+    # Handles API authentication
+    class AuthenticationController < ApplicationController
+      before_action :authorize_request, except: :login
+      before_action :set_user, only: :login
+
+      def login
+        if @user&.authenticate(params[:password])
+          token = JsonWebToken.encode(user_id: @user.id)
+          time = Time.now + 24.hours.to_i
+
+          render json: {
+            token:,
+            exp: time.strftime('%m-%d-%Y %H:%M'),
+            user: @user
+          }, except: [:password_digest], status: :ok
+        else
+          render json: {
+            error: 'unauthorized'
+          }, status: :unauthorized
+        end
+      end
+
+      def me
+        render json: @current_user, except: [:password_digest]
+      end
+
+      private
+
+      def set_user
+        @user = User.find_by_email(params[:email])
+      end
+
+      def login_params
+        params.permit(:email, :password)
+      end
+    end
+  end
+end
+```
 
 #### ./app/controllers/api/v1/entries_controller.rb
 
 ```rb
-class Api::V1::EntriesController < ApplicationController
-  before_action :set_entry, only: %i[ show update destroy ]
+module Api
+  module V1
+    # Handles Entry entity API actions
+    class EntriesController < ApplicationController
+      before_action :authorize_request
+      before_action :set_entry, only: %i[show update destroy]
+      before_action :set_direction, :set_order_by, :set_page, :set_per_page, :set_search, only: %i[index]
 
-  # GET /entries
-  def index
-    @direction = "ASC"
-    if params[:direction]
-      @direction = params[:direction]
+      def index
+        result = @current_user.entries.order("#{@order_by} #{@direction}").page(@page).per(@per_page)
+        result = result.search_by_term(@search) if @search
+        total = result.total_count
+        last_page = total.fdiv(@per_page).ceil
+
+        render json: {
+          result:,
+          direction: @direction,
+          order_by: @order_by,
+          page: @page,
+          per_page: @per_page,
+          search: @search,
+          total:,
+          last_page:
+        }
+      end
+
+      def show
+        render json: @entry
+      end
+
+      def create
+        @entry = @current_user.entries.new(entry_params)
+
+        if @entry.save
+          render json: @entry, status: :created
+        else
+          render json: @entry.errors, status: :unprocessable_entity
+        end
+      end
+
+      def update
+        if @entry.update(entry_params)
+          render json: @entry
+        else
+          render json: @entry.errors, status: :unprocessable_entity
+        end
+      end
+
+      def destroy
+        @entry.destroy
+      end
+
+      private
+
+      def set_direction
+        @direction = params[:direction] || 'ASC'
+      end
+
+      def set_order_by
+        @order_by = params[:order_by] || 'id'
+      end
+
+      def set_page
+        @page = params[:page].to_i.positive? ? params[:page].to_i : 1
+      end
+
+      def set_per_page
+        @per_page = params[:per_page].to_i.positive? ? params[:per_page].to_i : 25
+      end
+
+      def set_search
+        @search = params[:search]
+      end
+
+      def set_entry
+        @entry = @current_user.entries.find(params[:id])
+      end
+
+      def entry_params
+        params.permit(:name, :description, :date, :value)
+      end
     end
-
-    @order_by = "id"
-    if params[:order_by]
-      @order_by = params[:order_by]
-    end
-
-    @page = 1
-    if params[:page]
-      @page = params[:page].to_i
-    end
-
-    @per_page = 25
-    if params[:per_page]
-      @per_page = params[:per_page].to_i
-    end
-
-    @search = params[:search]
-
-    @result = Entry.order("#@order_by #@direction").page(@page).per(@per_page)
-
-    if @search
-      @result = @result.search_by_term(@search)
-    end
-
-    @total = @result.total_count
-
-    @last_page = @total.fdiv(@per_page).ceil
-
-    render json: {
-      result: @result,
-      direction: @direction,
-      order_by: @order_by,
-      page: @page,
-      per_page: @per_page,
-      search: @search,
-      total: @total,
-      last_page: @last_page,
-    }
   end
+end
+```
 
-  # GET /entries/1
-  def show
-    render json: @entry
-  end
+### Migrations:
 
-  # POST /entries
-  def create
-    @entry = Entry.new(entry_params)
+#### ./db/migrate/\*\*\*\_create_user.rb
 
-    if @entry.save
-      render json: @entry, status: :created
-    else
-      render json: @entry.errors, status: :unprocessable_entity
+```rb
+# User entity model migration
+class CreateUsers < ActiveRecord::Migration[7.0]
+  def change
+    create_table :users do |t|
+      t.string :first_name
+      t.string :last_name
+      t.string :avatar
+      t.string :username
+      t.string :email
+      t.string :password_digest
+
+      t.timestamps
     end
   end
+end
+```
 
-  # PATCH/PUT /entries/1
-  def update
-    if @entry.update(entry_params)
-      render json: @entry
-    else
-      render json: @entry.errors, status: :unprocessable_entity
+#### ./db/migrate/\*\*\*\_create_categories.rb
+
+```rb
+# User entity model migration
+class CreateUsers < ActiveRecord::Migration[7.0]
+  def change
+    create_table :users do |t|
+      t.string :first_name
+      t.string :last_name
+      t.string :avatar
+      t.string :username
+      t.string :email
+      t.string :password_digest
+
+      t.timestamps
     end
   end
+end
+```
 
-  # DELETE /entries/1
-  def destroy
-    @entry.destroy
-  end
+#### ./db/migrate/\*\*\*\_create_entries.rb
 
-  private
+```rb
+# Entry entity model migration
+class CreateEntries < ActiveRecord::Migration[7.0]
+  def change
+    create_table :entries do |t|
+      t.string :name
+      t.string :description
+      t.date :date
+      t.decimal :value
+      t.belongs_to :user, foreign_key: true
+      t.belongs_to :category, foreign_key: true
 
-  # Use callbacks to share common setup or constraints between actions.
-  def set_entry
-    @entry = Entry.find(params[:id])
-  end
-
-  # Only allow a list of trusted parameters through.
-  def entry_params
-    params.require(:entry).permit(:name, :description, :date, :value)
+      t.timestamps
+    end
   end
 end
 ```
@@ -282,12 +492,55 @@ end
 #### ./db/seeds.rb
 
 ```rb
-50.times do
+User.create({
+              first_name: 'root',
+              last_name: 'admin',
+              username: 'admin',
+              email: 'root@admin.com',
+              password: ENV['ROOT_ADMIN_PASSWORD']
+            })
+
+entry_categories = [
+  {
+    name: 'Other',
+    user_id: 1
+  },
+  {
+    name: 'Groceries',
+    user_id: 1
+  },
+  {
+    name: 'Transport',
+    user_id: 1
+  },
+  {
+    name: 'Health',
+    user_id: 1
+  },
+  {
+    name: 'Leisure',
+    user_id: 1
+  },
+  {
+    name: 'Habitation',
+    user_id: 1
+  },
+  {
+    name: 'Communication',
+    user_id: 1
+  }
+]
+
+entry_categories.each { |category| Category.create(category) }
+
+1800.times do
   Entry.create({
-    name: Faker::Name.name,
-    description: Faker::Lorem.paragraph,
-    date: Faker::Date.between(from: 30.days.ago, to: Date.today),
-    value: Faker::Number.between(from: -1000.0, to: 1000.0),
-  })
+                 category_id: Faker::Number.between(from: 1, to: 7),
+                 user_id: 1,
+                 name: Faker::Name.name,
+                 description: Faker::Lorem.paragraph,
+                 date: Faker::Date.between(from: 180.days.ago, to: Date.today),
+                 value: Faker::Number.between(from: -1000, to: 1000)
+               })
 end
 ```
