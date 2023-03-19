@@ -68,17 +68,17 @@ $ rails s
 
 ## Useful gems
 
-`"rack-cors"` => Makes cross-origin AJAX possible.
+`gem 'rack-cors'` => Makes cross-origin AJAX possible.
 
-`"kaminari"` => Pagination.
+`gem 'kaminari'` => Pagination.
 
-`"pg_search"` => PostgreSQL search.
+`gem 'pg_search'` => PostgreSQL search.
 
-`"carrierwave", ">= 3.0.0.beta", "< 4.0"` => File upload.
+`gem 'carrierwave', '>= 3.0.0.beta', '< 4.0'` => File upload.
 
-`"rubocop"` => Good pratices and code style.
+`gem 'rubocop'` => Good pratices and code style.
 
-`"'dotenv-rails', groups: %i[development test]"` => Enable .env files.
+`gem 'dotenv-rails', groups: %i[development test]'` => Enable .env files.
 
 ## Code Examples
 
