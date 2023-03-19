@@ -1,13 +1,13 @@
 module Api
   module V1
-    # Handles User entity API actions
-    class UsersController < ApplicationController
-      before_action :authorize_request, except: :create
-      before_action :set_user, only: %i[show update destroy]
+    # Handles Category entity API actions
+    class CategoriesController < ApplicationController
+      before_action :authorize_request
+      before_action :set_category, only: %i[show update destroy]
       before_action :set_direction, :set_order_by, :set_page, :set_per_page, :set_search, only: %i[index]
 
       def index
-        result = User.order("#{@order_by} #{@direction}").page(@page).per(@per_page)
+        result = @current_user.categories.order("#{@order_by} #{@direction}").page(@page).per(@per_page)
         result = result.search_by_term(@search) if @search
         total = result.total_count
         last_page = total.fdiv(@per_page).ceil
@@ -25,29 +25,29 @@ module Api
       end
 
       def show
-        render json: @user, except: [:password_digest]
+        render json: @category
       end
 
       def create
-        @user = User.new(user_params)
+        @category = @current_user.categories.new(category_params)
 
-        if @user.save
-          render json: @user, except: [:password_digest], status: :created
+        if @category.save
+          render json: @category, status: :created
         else
-          render json: @user.errors, status: :unprocessable_entity
+          render json: @category.errors, status: :unprocessable_entity
         end
       end
 
       def update
-        if @user.update(user_params)
-          render json: @user, except: [:password_digest]
+        if @category.update(category_params)
+          render json: @category
         else
-          render json: @user.errors, status: :unprocessable_entity
+          render json: @category.errors, status: :unprocessable_entity
         end
       end
 
       def destroy
-        @user.destroy
+        @category.destroy
       end
 
       private
@@ -72,12 +72,12 @@ module Api
         @search = params[:search]
       end
 
-      def set_user
-        @user = User.find(params[:id])
+      def set_category
+        @category = @current_user.categories.find(params[:id])
       end
 
-      def user_params
-        params.permit(:first_name, :last_name, :avatar, :username, :email, :password, :password_confirmation)
+      def category_params
+        params.permit(:name, :image)
       end
     end
   end

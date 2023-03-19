@@ -65,7 +65,7 @@ module Api
       end
 
       def set_per_page
-        @per_page = params[:page].to_i.positive? ? params[:per_page].to_i : 25
+        @per_page = params[:per_page].to_i.positive? ? params[:per_page].to_i : 25
       end
 
       def set_search

@@ -1,4 +1,7 @@
-Style/EndOfLine:
+AllCops:
+  Exclude:
+    - "db/schema.rb"
+Layout/EndOfLine:
   Enabled: false
 Style/FrozenStringLiteralComment:
   Enabled: false

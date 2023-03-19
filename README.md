@@ -9,61 +9,61 @@ CashIO API built with Ruby on Rails.
 ### Create new model:
 
 ```
-rails g model Entry name:string phone:string last_purchase:date
+$ rails g model Entry name:string phone:string last_purchase:date
 ```
 
 ### Create new database based on app/models/\*.rb:
 
 ```
-rails db:create
+$ rails db:create
 ```
 
 ### Migrate created database:
 
 ```
-rails db:migrate
+$ rails db:migrate
 ```
 
 ### Prepare tests for created database:
 
 ```
-rails db:test:prepare
+$ rails db:test:prepare
 ```
 
 ### Populate database based on db/seeds.rb:
 
 ```
-rails db:seed RAILS_ENV=development
+$ rails db:seed RAILS_ENV=development
 ```
 
 ### Generate controller with CRUD operations:
 
 ```
-rails g scaffold_controller Entry
+$ rails g scaffold_controller Entry
 ```
 
 ### Generate Kaminari gem config file, to implement pagination:
 
 ```
-rails g kaminari:config
+$ rails g kaminari:config
 ```
 
 ### Generate uploader:
 
 ```
-rails g uploader Avatar
+$ rails g uploader Avatar
 ```
 
 ### Show all api routes:
 
 ```
-rails routes
+$ rails routes
 ```
 
 ### Serve app:
 
 ```
-rails s
+$ rails s
 ```
 
 ## Useful gems

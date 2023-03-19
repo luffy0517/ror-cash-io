@@ -1,4 +1,4 @@
-# CreateEntries class definition
+# Entry entity model migration
 class CreateEntries < ActiveRecord::Migration[7.0]
   def change
     create_table :entries do |t|
@@ -7,6 +7,7 @@ class CreateEntries < ActiveRecord::Migration[7.0]
       t.date :date
       t.decimal :value
       t.belongs_to :user, foreign_key: true
+      t.belongs_to :category, foreign_key: true
 
       t.timestamps
     end
