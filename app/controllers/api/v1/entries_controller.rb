@@ -4,11 +4,12 @@ module Api
     class EntriesController < ApplicationController
       before_action :authorize_request
       before_action :set_entry, only: %i[show update destroy]
-      before_action :set_direction, :set_order_by, :set_page, :set_per_page, :set_search, only: %i[index]
-
+      before_action :set_direction, :set_order_by, :set_page, :set_per_page, :set_search, :set_category_id,
+                    only: :index
       def index
         result = @current_user.entries.order("#{@order_by} #{@direction}").page(@page).per(@per_page)
         result = result.search_by_term(@search) if @search
+        result = result.search_by_category_id(@category_id) if @category_id
         total = result.total_count
         last_page = total.fdiv(@per_page).ceil
 
@@ -70,6 +71,10 @@ module Api
 
       def set_search
         @search = params[:search]
+      end
+
+      def set_category_id
+        @category_id = params[:category_id]
       end
 
       def set_entry
