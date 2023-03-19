@@ -4,7 +4,7 @@ module Api
     class CategoriesController < ApplicationController
       before_action :authorize_request
       before_action :set_category, only: %i[show update destroy]
-      before_action :set_direction, :set_order_by, :set_page, :set_per_page, :set_search, only: :index
+      before_action :set_page_params, :set_order_params, :set_search_params, only: :index
 
       def index
         result = @current_user.categories.order("#{@order_by} #{@direction}").page(@page).per(@per_page)
@@ -52,23 +52,17 @@ module Api
 
       private
 
-      def set_direction
-        @direction = params[:direction] || 'ASC'
-      end
-
-      def set_order_by
-        @order_by = params[:order_by] || 'id'
-      end
-
-      def set_page
+      def set_page_params
         @page = params[:page].to_i.positive? ? params[:page].to_i : 1
-      end
-
-      def set_per_page
         @per_page = params[:per_page].to_i.positive? ? params[:per_page].to_i : 25
       end
 
-      def set_search
+      def set_order_params
+        @direction = params[:direction] || 'ASC'
+        @order_by = params[:order_by] || 'id'
+      end
+
+      def set_search_params
         @search = params[:search]
       end
 
