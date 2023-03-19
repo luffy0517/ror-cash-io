@@ -6,6 +6,7 @@ ruby '3.1.3'
 gem 'bcrypt', '~> 3.1.7'
 gem 'bootsnap', require: false
 gem 'carrierwave', '>= 3.0.0.beta', '< 4.0'
+gem 'dotenv-rails', groups: %i[development test]
 gem 'jwt'
 gem 'kaminari'
 gem 'pg', '~> 1.1'

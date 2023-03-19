@@ -2,6 +2,7 @@
 class Entry < ApplicationRecord
   include PgSearch::Model
   belongs_to :user
+  belongs_to :category
   validates :name, presence: true
   validates :date, presence: true
   validates :value, presence: true
