@@ -76,7 +76,7 @@ rails s
 
 `"carrierwave", ">= 3.0.0.beta", "< 4.0"` => File upload.
 
-`"rubocop" => Good pratices and code style.
+`"rubocop"` => Good pratices and code style.
 
 ## Code Examples
 
