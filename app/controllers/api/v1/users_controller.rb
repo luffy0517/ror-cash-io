@@ -9,18 +9,16 @@ module Api
       def index
         result = User.order("#{@order_by} #{@direction}").page(@page).per(@per_page)
         result = result.search_by_term(@search) if @search
-        total = result.total_count
-        last_page = total.fdiv(@per_page).ceil
 
         render json: {
-          result:,
           direction: @direction,
+          last_page: result.total_count.fdiv(@per_page).ceil,
           order_by: @order_by,
           page: @page,
           per_page: @per_page,
           search: @search,
-          total:,
-          last_page:
+          total: result.total_count,
+          result:
         }
       end
 
