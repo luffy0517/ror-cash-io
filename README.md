@@ -76,7 +76,7 @@ $ rails s
 
 `gem 'carrierwave', '>= 3.0.0.beta', '< 4.0'` => File upload.
 
-`gem 'rubocop'` => Good pratices and code style.
+`gem 'rubocop-rails', require: false` => Good pratices and code style.
 
 `gem 'dotenv-rails', groups: %i[development test]'` => Enable .env files.
 
