@@ -12,4 +12,10 @@ class Entry < ApplicationRecord
       prefix: true
     }
   }
+  pg_search_scope :search_by_category_id, against: :category_id, using: {
+    tsearch: {
+      any_word: true,
+      prefix: true
+    }
+  }
 end
