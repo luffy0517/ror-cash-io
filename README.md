@@ -78,7 +78,7 @@ $ rails s
 
 `gem 'rubocop-rails', require: false` => Good pratices and code style.
 
-`gem 'dotenv-rails', groups: %i[development test]'` => Enable .env files.
+`gem 'dotenv-rails', groups: %i[development test]'` => Enables .env files.
 
 ## Code Examples
 
