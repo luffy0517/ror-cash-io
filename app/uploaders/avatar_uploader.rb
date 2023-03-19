@@ -1,3 +1,4 @@
+# AvatarUploader class definition
 class AvatarUploader < CarrierWave::Uploader::Base
   # Include RMagick or MiniMagick support:
   # include CarrierWave::RMagick

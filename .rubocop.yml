@@ -1,0 +1,6 @@
+Style/EndOfLine:
+  Enabled: false
+Style/FrozenStringLiteralComment:
+  Enabled: false
+Metrics/MethodLength:
+  Max: 32
