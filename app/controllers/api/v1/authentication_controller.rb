@@ -7,10 +7,8 @@ module Api
 
       def login
         if @user&.authenticate(params[:password])
-          token = JsonWebToken.encode(user_id: @user.id)
-
           render json: {
-            token:,
+            token: JsonWebToken.encode(user_id: @user.id),
             exp: @time.strftime('%m-%d-%Y %H:%M'),
             user: @user
           }, except: :password_digest, status: :ok
