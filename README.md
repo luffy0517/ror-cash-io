@@ -220,6 +220,12 @@ class Entry < ApplicationRecord
       prefix: true
     }
   }
+  pg_search_scope :search_by_category_id, against: :category_id, using: {
+    tsearch: {
+      any_word: true,
+      prefix: true
+    }
+  }
 end
 ```
 
@@ -304,35 +310,33 @@ module Api
     class UsersController < ApplicationController
       before_action :authorize_request, except: :create
       before_action :set_user, only: %i[show update destroy]
-      before_action :set_direction, :set_order_by, :set_page, :set_per_page, :set_search, only: %i[index]
+      before_action :set_page_params, :set_order_params, :set_search_params, only: :index
 
       def index
         result = User.order("#{@order_by} #{@direction}").page(@page).per(@per_page)
         result = result.search_by_term(@search) if @search
-        total = result.total_count
-        last_page = total.fdiv(@per_page).ceil
 
         render json: {
-          result:,
           direction: @direction,
+          last_page: result.total_count.fdiv(@per_page).ceil,
           order_by: @order_by,
           page: @page,
           per_page: @per_page,
           search: @search,
-          total:,
-          last_page:
+          total: result.total_count,
+          result:
         }
       end
 
       def show
-        render json: @user, except: [:password_digest]
+        render json: @user, except: :password_digest
       end
 
       def create
         @user = User.new(user_params)
 
         if @user.save
-          render json: @user, except: [:password_digest], status: :created
+          render json: @user, except: :password_digest, status: :created
         else
           render json: @user.errors, status: :unprocessable_entity
         end
@@ -340,7 +344,7 @@ module Api
 
       def update
         if @user.update(user_params)
-          render json: @user, except: [:password_digest]
+          render json: @user, except: :password_digest
         else
           render json: @user.errors, status: :unprocessable_entity
         end
@@ -352,23 +356,17 @@ module Api
 
       private
 
-      def set_direction
-        @direction = params[:direction] || 'ASC'
-      end
-
-      def set_order_by
-        @order_by = params[:order_by] || 'id'
-      end
-
-      def set_page
+      def set_page_params
         @page = params[:page].to_i.positive? ? params[:page].to_i : 1
-      end
-
-      def set_per_page
         @per_page = params[:per_page].to_i.positive? ? params[:per_page].to_i : 25
       end
 
-      def set_search
+      def set_order_params
+        @direction = params[:direction] || 'ASC'
+        @order_by = params[:order_by] || 'id'
+      end
+
+      def set_search_params
         @search = params[:search]
       end
 
@@ -393,25 +391,21 @@ module Api
     class CategoriesController < ApplicationController
       before_action :authorize_request
       before_action :set_category, only: %i[show update destroy]
-      before_action :set_direction, :set_order_by, :set_page, :set_per_page, :set_search, :set_category_id,
-                    only: %i[index]
+      before_action :set_page_params, :set_order_params, :set_search_params, only: :index
 
       def index
         result = @current_user.categories.order("#{@order_by} #{@direction}").page(@page).per(@per_page)
         result = result.search_by_term(@search) if @search
-        result = result.search_by_category_id(@category_id) if @category_id
-        total = result.total_count
-        last_page = total.fdiv(@per_page).ceil
 
         render json: {
-          result:,
           direction: @direction,
+          last_page: result.total_count.fdiv(@per_page).ceil,
           order_by: @order_by,
           page: @page,
           per_page: @per_page,
           search: @search,
-          total:,
-          last_page:
+          total: result.total_count,
+          result:
         }
       end
 
@@ -443,28 +437,18 @@ module Api
 
       private
 
-      def set_direction
-        @direction = params[:direction] || 'ASC'
-      end
-
-      def set_order_by
-        @order_by = params[:order_by] || 'id'
-      end
-
-      def set_page
+      def set_page_params
         @page = params[:page].to_i.positive? ? params[:page].to_i : 1
-      end
-
-      def set_per_page
         @per_page = params[:per_page].to_i.positive? ? params[:per_page].to_i : 25
       end
 
-      def set_search
-        @search = params[:search]
+      def set_order_params
+        @direction = params[:direction] || 'ASC'
+        @order_by = params[:order_by] || 'id'
       end
 
-      def set_category_id
-        @category_id = params[:category_id]
+      def set_search_params
+        @search = params[:search]
       end
 
       def set_category
@@ -488,23 +472,23 @@ module Api
     class EntriesController < ApplicationController
       before_action :authorize_request
       before_action :set_entry, only: %i[show update destroy]
-      before_action :set_direction, :set_order_by, :set_page, :set_per_page, :set_search, only: %i[index]
+      before_action :set_page_params, :set_order_params, :set_search_params, only: :index
 
       def index
         result = @current_user.entries.order("#{@order_by} #{@direction}").page(@page).per(@per_page)
         result = result.search_by_term(@search) if @search
-        total = result.total_count
-        last_page = total.fdiv(@per_page).ceil
+        result = result.search_by_category_id(@category_id) if @category_id
 
         render json: {
-          result:,
+          category_id: @category_id,
           direction: @direction,
+          last_page: result.total_count.fdiv(@per_page).ceil,
           order_by: @order_by,
           page: @page,
           per_page: @per_page,
           search: @search,
-          total:,
-          last_page:
+          total: result.total_count,
+          result:
         }
       end
 
@@ -536,24 +520,19 @@ module Api
 
       private
 
-      def set_direction
-        @direction = params[:direction] || 'ASC'
-      end
-
-      def set_order_by
-        @order_by = params[:order_by] || 'id'
-      end
-
-      def set_page
+      def set_page_params
         @page = params[:page].to_i.positive? ? params[:page].to_i : 1
-      end
-
-      def set_per_page
         @per_page = params[:per_page].to_i.positive? ? params[:per_page].to_i : 25
       end
 
-      def set_search
+      def set_order_params
+        @direction = params[:direction] || 'ASC'
+        @order_by = params[:order_by] || 'id'
+      end
+
+      def set_search_params
         @search = params[:search]
+        @category_id = params[:category_id]
       end
 
       def set_entry
@@ -593,16 +572,13 @@ end
 #### ./db/migrate/\*\*\*\_create_categories.rb
 
 ```rb
-# User entity model migration
-class CreateUsers < ActiveRecord::Migration[7.0]
+# Category entity model migration
+class CreateCategories < ActiveRecord::Migration[7.0]
   def change
-    create_table :users do |t|
-      t.string :first_name
-      t.string :last_name
-      t.string :avatar
-      t.string :username
-      t.string :email
-      t.string :password_digest
+    create_table :categories do |t|
+      t.string :name
+      t.string :image
+      t.belongs_to :user, foreign_key: true
 
       t.timestamps
     end
