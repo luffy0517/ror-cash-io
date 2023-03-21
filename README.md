@@ -9,7 +9,7 @@ Cash IO API built with Ruby on Rails.
 ### Create new model:
 
 ```
-$ rails g model Entry name:string phone:string last_purchase:date
+$ rails g model Entry name:string description:string date:date value:decimal
 ```
 
 ### Create new database based on app/models/\*.rb:
