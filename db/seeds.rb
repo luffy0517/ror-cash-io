@@ -1,9 +1,9 @@
 User.create({
               first_name: 'root',
-              last_name: 'admin',
-              username: 'admin',
-              email: 'root@admin.com',
-              password: ENV['ROOT_ADMIN_PASSWORD']
+              last_name: 'user',
+              username: 'user',
+              email: 'root@user.com',
+              password: ENV['ROOT_USER_PASSWORD']
             })
 
 entry_categories = [

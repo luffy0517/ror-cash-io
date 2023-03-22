@@ -616,7 +616,7 @@ User.create({
               last_name: 'admin',
               username: 'admin',
               email: 'root@admin.com',
-              password: ENV['ROOT_ADMIN_PASSWORD']
+              password: ENV['ROOT_USER_PASSWORD']
             })
 
 entry_categories = [
