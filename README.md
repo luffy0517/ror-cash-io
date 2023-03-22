@@ -549,7 +549,7 @@ end
 
 ### Migrations:
 
-#### ./db/migrate/\*\*\*\_create_user.rb
+#### ./db/migrate/\*\*\*\_create_users.rb
 
 ```rb
 # User entity model migration
