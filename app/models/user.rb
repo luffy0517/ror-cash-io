@@ -3,6 +3,7 @@ class User < ApplicationRecord
   include PgSearch::Model
   has_secure_password
   has_many :entries, dependent: :destroy
+  has_many :categories, dependent: :destroy
   mount_uploader :avatar, UserAvatarUploader
   validates :email, presence: true, uniqueness: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
