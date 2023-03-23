@@ -7,6 +7,7 @@ gem 'bcrypt', '~> 3.1.7'
 gem 'bootsnap', require: false
 gem 'carrierwave', '>= 3.0.0.beta', '< 4.0'
 gem 'dotenv-rails', groups: %i[development test]
+gem 'faker'
 gem 'jwt'
 gem 'kaminari'
 gem 'pg', '~> 1.1'
@@ -21,6 +22,5 @@ group :development, :test do
 end
 
 group :development do
-  gem 'faker'
   gem 'rubocop-rails', require: false
 end
