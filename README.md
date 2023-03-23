@@ -734,6 +734,20 @@ volumes:
   app-storage: {}
 ```
 
+#### ./bin/docker-entrypoint
+
+```bash
+#!/bin/bash
+
+if [ "${*}" == "./bin/rails server" ]; then
+  ./bin/rails db:create
+  ./bin/rails db:prepare
+  ./bin/rails db:seed
+fi
+
+exec "${@}"
+```
+
 ```
 # See https://docs.docker.com/engine/reference/builder/#dockerignore-file for more about ignoring files.
 
@@ -774,18 +788,4 @@ volumes:
 /app/assets/builds/*
 !/app/assets/builds/.keep
 /public/assets
-```
-
-#### ./bin/docker-entrypoint
-
-```bash
-#!/bin/bash
-
-if [ "${*}" == "./bin/rails server" ]; then
-  ./bin/rails db:create
-  ./bin/rails db:prepare
-  ./bin/rails db:seed
-fi
-
-exec "${@}"
 ```
