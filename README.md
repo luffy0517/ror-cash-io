@@ -24,12 +24,6 @@ $ rails db:create
 $ rails db:migrate
 ```
 
-### Prepare tests for created database:
-
-```
-$ rails db:test:prepare
-```
-
 ### Populate database based on db/seeds.rb:
 
 ```
@@ -91,22 +85,26 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: postgres
-  password: root
+  port: 5432
 
 development:
   <<: *default
   database: cash_io_development
+  username: <%= ENV['POSTGRES_USER'] %>
+  password: <%= ENV['POSTGRES_PASSWORD'] %>
 
 test:
   <<: *default
   database: cash_io_test
+  username: <%= ENV['POSTGRES_USER'] %>
+  password: <%= ENV['POSTGRES_PASSWORD'] %>
 
 production:
   <<: *default
-  database: cash_io_production
-  username: cash_io
-  password: <%= ENV["CASH_IO_DATABASE_PASSWORD"] %>
+  host: <%= ENV['POSTGRES_HOST'] %>
+  database: <%= ENV['POSTGRES_DB'] %>
+  username: <%= ENV['POSTGRES_USER'] %>
+  password: <%= ENV['POSTGRES_PASSWORD'] %>
 ```
 
 ### Gemfile:
@@ -137,8 +135,8 @@ group :development, :test do
 end
 
 group :development do
-  gem 'faker'
   gem 'rubocop-rails', require: false
+  gem 'faker'
 end
 ```
 
@@ -170,6 +168,7 @@ class User < ApplicationRecord
   include PgSearch::Model
   has_secure_password
   has_many :entries, dependent: :destroy
+  has_many :categories, dependent: :destroy
   mount_uploader :avatar, UserAvatarUploader
   validates :email, presence: true, uniqueness: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
@@ -611,47 +610,44 @@ end
 #### ./db/seeds.rb
 
 ```rb
-User.create({
-              first_name: 'root',
-              last_name: 'admin',
-              username: 'admin',
-              email: 'root@admin.com',
-              password: ENV['ROOT_USER_PASSWORD']
-            })
+ActiveRecord::Base.transaction do
+  ['common', Rails.env].each do |seed_file_name|
+    seed_file = "#{Rails.root}/db/seeds/#{seed_file_name}.rb"
+    if File.exist?(seed_file)
+      puts "-- Seeding data from file: #{seed_file_name}"
+      require seed_file
+    end
+  end
+end
+```
 
-entry_categories = [
-  {
-    name: 'Other',
-    user_id: 1
-  },
-  {
-    name: 'Groceries',
-    user_id: 1
-  },
-  {
-    name: 'Transport',
-    user_id: 1
-  },
-  {
-    name: 'Health',
-    user_id: 1
-  },
-  {
-    name: 'Leisure',
-    user_id: 1
-  },
-  {
-    name: 'Habitation',
-    user_id: 1
-  },
-  {
-    name: 'Communication',
-    user_id: 1
-  }
+#### ./db/seeds/common.rb
+
+```rb
+root_user = User.create({
+                          first_name: 'root',
+                          last_name: 'user',
+                          username: 'user',
+                          email: 'root@user.com',
+                          password: ENV['ROOT_USER_PASSWORD']
+                        })
+
+entry_categories = %w[
+  Other
+  Groceries
+  Transport
+  Health
+  Leisure
+  Habitation
+  Communication
 ]
 
-entry_categories.each { |category| Category.create(category) }
+entry_categories.each { |category| root_user.categories.create({ name: category }) }
+```
 
+#### ./db/seeds/development.rb
+
+```rb
 1800.times do
   Entry.create({
                  category_id: Faker::Number.between(from: 1, to: 7),
@@ -662,4 +658,134 @@ entry_categories.each { |category| Category.create(category) }
                  value: Faker::Number.between(from: -1000, to: 1000)
                })
 end
+```
+
+### Docker setup files:
+
+#### ./Dockerfile
+
+```Dockerfile
+ARG RUBY_VERSION=3.1.3
+FROM ruby:$RUBY_VERSION
+
+RUN apt-get update -qq && \
+  apt-get install -y postgresql nodejs && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man
+
+WORKDIR /rails
+
+ENV RAILS_LOG_TO_STDOUT="1" \
+  RAILS_SERVE_STATIC_FILES="true" \
+  RAILS_ENV="production" \
+  BUNDLE_WITHOUT="development"
+
+COPY Gemfile Gemfile.lock ./
+
+RUN bundle install
+
+COPY . .
+
+RUN bundle exec bootsnap precompile --gemfile app/ lib/
+
+ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+
+EXPOSE 3000
+
+CMD ["./bin/rails", "server"]
+```
+
+#### ./docker-compose.yml
+
+```yml
+version: "3"
+services:
+  db:
+    image: postgres:14.2-alpine
+    container_name: postgres-14.2
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: "postgres -c 'max_connections=500'"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+  web:
+    build: .
+    command: "./bin/rails server"
+    environment:
+      - RAILS_ENV=${RAILS_ENV}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+      - ROOT_USER_PASSWORD=${ROOT_USER_PASSWORD}
+    volumes:
+      - app-storage:/rails/storage
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+volumes:
+  postgres_data: {}
+  app-storage: {}
+```
+
+```
+# See https://docs.docker.com/engine/reference/builder/#dockerignore-file for more about ignoring files.
+
+# Ignore git directory.
+/.git/
+
+# Ignore bundler config.
+/.bundle
+
+# Ignore all default key files.
+/config/master.key
+/config/credentials/*.key
+
+# Ignore all environment files.
+/.env*
+!/.env.example
+
+# Ignore all logfiles and tempfiles.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+# Ignore pidfiles, but keep the directory.
+/tmp/pids/*
+!/tmp/pids/
+!/tmp/pids/.keep
+
+# Ignore storage (uploaded files in development and any SQLite databases).
+/storage/*
+!/storage/.keep
+/tmp/storage/*
+!/tmp/storage/
+!/tmp/storage/.keep
+
+# Ignore assets.
+/node_modules/
+/app/assets/builds/*
+!/app/assets/builds/.keep
+/public/assets
+```
+
+#### ./bin/docker-entrypoint
+
+```bash
+#!/bin/bash
+
+if [ "${*}" == "./bin/rails server" ]; then
+  ./bin/rails db:create
+  ./bin/rails db:prepare
+  ./bin/rails db:seed
+fi
+
+exec "${@}"
 ```
