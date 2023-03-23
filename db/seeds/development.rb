@@ -1,5 +1,5 @@
 1800.times do
-  Entry.create!({
+  Entry.create({
                   category_id: Faker::Number.between(from: 1, to: 7),
                   user_id: 1,
                   name: Faker::Name.name,
