@@ -1,6 +1,6 @@
 # CashIO Backend
 
-CashIO API built with Ruby on Rails api-only
+CashIO API built with Ruby on Rails on api-only mode.
 
 [![Ruby Style Guide](https://img.shields.io/badge/code_style-rubocop-brightgreen.svg)](https://github.com/rubocop/rubocop)
 
